@@ -1,0 +1,7 @@
+*
+!.gitignore
+!.bashrc
+!.pylintrc
+!.vimrc
+!.tmux.conf
+!installdotfiles.sh
