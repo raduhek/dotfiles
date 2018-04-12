@@ -14,3 +14,5 @@ vim +PluginInstall +qall
 cd ./.vim/bundle/youcompleteme && ./install.py --clang-completer
 pip install --upgrade pip
 pip install powerline-status
+
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
