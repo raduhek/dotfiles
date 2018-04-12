@@ -52,9 +52,11 @@ map <C-left> <C-w>h
 map <C-down> <C-w>j
 map <C-right> <C-w>l
 map <C-up> <C-w>k
+set splitright
+set splitbelow
 
 " Find files and bookmarks
-nmap <C-f> :CtrlP<CR>
+let g:ctrlp_map = '<C-f>'
 let g:bookmark_no_default_key_mappings = 1
 let g:bookmark_highlight_lines = 1
 let g:bookmark_auto_save = 0
