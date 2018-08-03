@@ -16,3 +16,8 @@ pip install --upgrade pip
 pip install powerline-status
 
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+sudo apt-get install wget tar libevent-dev libncurses-dev
+VERSION=2.6 && mkdir ~/tmux-src && wget -qO- https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz | tar xvz -C ~/tmux-src && cd ~/tmux-src/tmux*
+cd ~/tmux-src/tmux-2.6/
+./configure && make -j"$(nproc)" && sudo make install
+cd && rm -rf ~/tmux-src
