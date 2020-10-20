@@ -2,6 +2,8 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+export PATH=$PATH:$HOME/bin:/usr/local/go/bin
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -16,9 +18,8 @@ HISTCONTROL=ignoreboth
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=-1
-HISTFILESIZE=-1
-
+HISTSIZE=
+HISTFILESIZE=
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
@@ -36,7 +37,6 @@ if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
 fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
-export TERM=xterm-256color
 case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
@@ -44,7 +44,7 @@ esac
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
-#force_color_prompt=yes
+force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
@@ -57,11 +57,62 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-fi
+# Git goodies
+_parse_git_dirty() {
+    STATUS="$(git status 2> /dev/null)"
+    if [[ $? -ne 0 ]]; then
+        PS_GIT_DIRTY="-"
+        return
+    fi
+    PS_GIT_STATUS=""
+    if echo ${STATUS} | grep -c "renamed:"         &> /dev/null; then PS_GIT_STATUS=">"; fi
+    if echo ${STATUS} | grep -c "branch is ahead:" &> /dev/null; then PS_GIT_STATUS="!"; fi
+    if echo ${STATUS} | grep -c "new file::"       &> /dev/null; then PS_GIT_STATUS="+"; fi
+    if echo ${STATUS} | grep -c "Untracked files:" &> /dev/null; then PS_GIT_STATUS="?"; fi
+    if echo ${STATUS} | grep -c "modified:"        &> /dev/null; then PS_GIT_STATUS="*"; fi
+    if echo ${STATUS} | grep -c "deleted:"         &> /dev/null; then PS_GIT_STATUS="-"; fi
+    PS_GIT_DIRTY="[${PS_GIT_STATUS}]"
+}
+
+_parse_git_branch() {
+    PS_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+    PS_GIT="${PY}: \${PS_GIT_BRANCH}${PRES}"
+    PS_GIT_DIRTY=""
+    return
+    if [[ ! -z ${PS_GIT_BRANCH} ]]; then
+        _parse_git_dirty
+    fi
+}
+
+_parse_virtualenv() {
+    PS_VENV=""
+    if [[ ! -z "$VIRTUAL_ENV" ]]; then
+        PS_VENV="[`basename \"\$VIRTUAL_ENV\"`] "
+    fi
+}
+
+_ps1() {
+    LAST_EXIT_CODE=$?
+    history -a
+    PS_GIT=""
+    PS_LE="\#:${LAST_EXIT_CODE} "
+    if [[ $LAST_EXIT_CODE -ne 0 ]]; then
+        PS_LE="${PR}${PS_LE}${PRES} "
+    fi
+    _parse_virtualenv
+    if [[ -d .git ]]; then
+        _parse_git_branch
+    fi
+    PS1="\${debian_chroot:+(\$debian_chroot)}${PS_LE}${PG}\u${PRES}@${PB}\w${PRES}${PS_GIT}\n${PS_VENV}\$ "
+}
+
+PROMPT_COMMAND="_ps1"
+PRES="\[\033[0m\]"
+PR="\[\033[0;31m\]"
+PG="\[\033[01;32m\]"
+PB="\[\033[01;34m\]"
+PY="\[\033[0;33m\]"
+
 unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
@@ -80,7 +131,7 @@ if [ -x /usr/bin/dircolors ]; then
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
-    alias grep='grep --color=auto'
+    alias grep='grep -i --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
 fi
@@ -117,7 +168,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
+eval `ssh-agent` 2>&1 > /dev/null
+ssh-add > /dev/null 2>&1
 
-if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
+export ANSIBLE_SSH_ARGS=""
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
+source /usr/local/bin/virtualenvwrapper.sh
+
+export DOCKER_HOST=tcp://localhost:2375

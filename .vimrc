@@ -2,6 +2,7 @@ set encoding=utf-8
 set runtimepath+=~/.vim_runtime
 
 " set the runtime path to include Vundle and initialize
+autocmd FileType go nnoremap <buffer> <F9> :!go build expand('%:r:t') $$ ./expand('%:r:t')<CR>
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
@@ -17,7 +18,8 @@ Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'mattesgroeger/vim-bookmarks'
 Plugin 'vimwiki/vimwiki'
 Plugin 'morhetz/gruvbox'
-Plugin 'w0rp/ale'
+Plugin 'dense-analysis/ale'
+Plugin 'hashivim/vim-terraform'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -29,6 +31,7 @@ colorscheme gruvbox
 
 " Powerline plugin installed using pip
 set rtp+=/usr/local/lib/python3.5/dist-packages/powerline/bindings/vim/
+set rtp+=$GOPATH/src/golang.org/x/lint/misc/vim
 set laststatus=2
 
 " NERDTree settings
@@ -86,9 +89,10 @@ set backspace=indent,eol,start
 let g:ycm_python_binary_path = 'python'
 let g:ycm_auto_trigger = 1
 let g:ycm_autoclose_preview_window_after_completion = 1
-let g:virtualenv_auto_activate = 1
+let g:virtualenv_auto_activate = 0
 au BufNewFile,BufRead *.py call ActivateVirtualEnv()
-let g:ale_linters={ 'python': ['pylint'] }
+let g:ale_linters_explicit=1
+let g:ale_linters={ 'python': ['pylint'], 'go': ['gometalinter', 'gofmt'] }
 " let g:ale_python_pylint_executable='pylint --rcfile=/home/raducruceru/.pylintrc'
 let g:ale_sign_column_always = 1
 let g:ale_set_loclist = 1
@@ -98,7 +102,6 @@ nmap <silent> <C-j> <Plug>(ale_next_wrap)
 
 let python_highlight_all=1
 syntax on
-
 
 function! ActivateVirtualEnv()
 	if strlen($VIRTUAL_ENV)==0
@@ -112,7 +115,6 @@ p = ":".join([p for p in sys.path if p])
 vim.command("let pp='%s'" % p)
 EOF
 let $PYTHONPATH=pp
-let g:ycm_python_binary_path=$VIRTUAL_ENV."/bin/python"
 endfunction
 
 
@@ -203,4 +205,7 @@ let NERDTreeShowHidden=1
 let NERDTreeWinSize=31
 
 " Jump to stuff
-map <C-d> :YcmCompleter GoToDefinition<CR>
+map <C-d> :YcmCompleter GoToDefinition<CR> 
+
+" Build/run
+autocmd FileType go nnoremap <buffer> <F9> :!rm "%:p:h:t"<CR>:write !go build -o "%:p:h:t"<CR>:write ! ./"%:p:h:t"<CR>
