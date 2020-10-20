@@ -201,3 +201,6 @@ map <leader>o :BufExplorer<cr>
 map <leader>nf :NERDTreeFind<cr>
 let NERDTreeShowHidden=1
 let NERDTreeWinSize=31
+
+" Jump to stuff
+map <C-d> :YcmCompleter GoToDefinition<CR>
