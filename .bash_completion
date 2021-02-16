@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+CONTEXTS=""
+AWS_PROFILES=""
+__contexts()
+{
+  CONTEXTS="$(cat $HOME/.kube/config | shyaml get-values contexts | grep 'name:' | sed 's/name: //g' | xargs)"
+}
+
+__aws_profiles()
+{
+  AWS_PROFILES="$(cat ~/.aws/credentials | grep '\[' | tr -d '[]' | xargs)"
+}
+
+_dashboard()
+{
+  if [ $COMP_CWORD != 1 ]; then
+    return
+  fi
+  __contexts
+  COMPREPLY=($(compgen -W "$CONTEXTS" "${COMP_WORDS[$COMP_CWORD]}"))
+}
+
+_i2cssh()
+{
+  CLUSTERS="$(cat ~/.i2csshrc | shyaml keys clusters)"
+  COMPREPLY=($(compgen -W "$CLUSTERS" "${COMP_WORDS[$COMP_CWORD]}"))
+}
+
+_aws_profiles()
+{
+  if [ $COMP_CWORD != 1 ]; then
+    return
+  fi
+  __aws_profiles
+  COMPREPLY=($(compgen -W "$AWS_PROFILES" "${COMP_WORDS[$COMP_CWORD]}"))
+}
+
+complete -F _dashboard ",kdashboard"
+complete -F _dashboard ",kuse"
+complete -F _i2cssh "i2cssh"
+complete -F _aws_profiles ",awscreds"
+

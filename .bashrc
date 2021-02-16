@@ -2,7 +2,6 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-export PATH=$PATH:$HOME/bin:/usr/local/go/bin
 
 # If not running interactively, don't do anything
 case $- in
@@ -76,7 +75,8 @@ _parse_git_dirty() {
 
 _parse_git_branch() {
     PS_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
-    PS_GIT="${PY}: \${PS_GIT_BRANCH}${PRES}"
+    PS_REMOTE=$(git remote -v 2> /dev/null | sed -n 's/.*:\(.*\)\/\(.*\).git (fetch)/\1:\2/p')
+    PS_GIT="${PY}: \${PS_GIT_BRANCH}${PRES}${PLY}@\${PS_REMOTE}${PRES}"
     PS_GIT_DIRTY=""
     return
     if [[ ! -z ${PS_GIT_BRANCH} ]]; then
@@ -95,15 +95,14 @@ _ps1() {
     LAST_EXIT_CODE=$?
     history -a
     PS_GIT=""
-    PS_LE="\#:${LAST_EXIT_CODE} "
+    PS_LE="\#:${LAST_EXIT_CODE}"
     if [[ $LAST_EXIT_CODE -ne 0 ]]; then
-        PS_LE="${PR}${PS_LE}${PRES} "
+        PS_LE="${PR}${PS_LE}${PRES}"
     fi
+    PS_DATE=$(date +%T)
     _parse_virtualenv
-    if [[ -d .git ]]; then
-        _parse_git_branch
-    fi
-    PS1="\${debian_chroot:+(\$debian_chroot)}${PS_LE}${PG}\u${PRES}@${PB}\w${PRES}${PS_GIT}\n${PS_VENV}\$ "
+    _parse_git_branch
+    PS1="\${debian_chroot:+(\$debian_chroot)}${PS_LE}@${PS_DATE} ${PG}\u${PRES}@${PB}\w${PRES}${PS_GIT}\n${PS_VENV}\$ "
 }
 
 PROMPT_COMMAND="_ps1"
@@ -111,7 +110,10 @@ PRES="\[\033[0m\]"
 PR="\[\033[0;31m\]"
 PG="\[\033[01;32m\]"
 PB="\[\033[01;34m\]"
-PY="\[\033[0;33m\]"
+# PY="\[\033[0;93m\]"
+PY="\[\033[38;5;11m\]"
+# PLY="\[\033[0;33m\]"
+PLY="\[\033[38;5;229m\]"
 
 unset color_prompt force_color_prompt
 
@@ -168,11 +170,17 @@ if ! shopt -oq posix; then
   fi
 fi
 
-eval `ssh-agent` 2>&1 > /dev/null
-ssh-add > /dev/null 2>&1
+if [ -z "$SSH_AGENT_PID" ]; then
+  eval `ssh-agent` 2>&1 > /dev/null
+  ssh-add > /dev/null 2>&1
+fi
 
 export ANSIBLE_SSH_ARGS=""
 export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
 source /usr/local/bin/virtualenvwrapper.sh
 
 export DOCKER_HOST=tcp://localhost:2375
+export GOPATH=/mnt/c/Users/rcruceru/w/go_projects
+export GO111MODULE=on
+export PATH=$PATH:/usr/local/go/bin:/mnt/c/Users/rcruceru/w/go_projects/bin
+source ~/.kubectl_completion

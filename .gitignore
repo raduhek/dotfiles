@@ -4,4 +4,7 @@
 !.pylintrc
 !.vimrc
 !.tmux.conf
+!bin/
+!.*completion
+.kubectl_completion
 !installdotfiles.sh
