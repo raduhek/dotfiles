@@ -75,13 +75,11 @@ _parse_git_dirty() {
 
 _parse_git_branch() {
     PS_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
-    PS_REMOTE=$(git remote -v 2> /dev/null | sed -n 's/.*:\(.*\)\/\(.*\).git (fetch)/\1:\2/p')
-    PS_GIT="${PY}: \${PS_GIT_BRANCH}${PRES}${PLY}@\${PS_REMOTE}${PRES}"
-    PS_GIT_DIRTY=""
-    return
-    if [[ ! -z ${PS_GIT_BRANCH} ]]; then
-        _parse_git_dirty
+    if [ "" = "${PS_GIT_BRANCH}" ]; then
+      return
     fi
+    PS_REMOTE=$(git remote -v 2> /dev/null | sed -n 's/origin.*:\(.*\)\/\(.*\).git (fetch)/\1:\2/p')
+    PS_GIT="${PY}[\${PS_GIT_BRANCH}${PRES}${PLY}@\${PS_REMOTE}]${PRES}"
 }
 
 _parse_virtualenv() {
@@ -102,7 +100,7 @@ _ps1() {
     PS_DATE=$(date +%T)
     _parse_virtualenv
     _parse_git_branch
-    PS1="\${debian_chroot:+(\$debian_chroot)}${PS_LE}@${PS_DATE} ${PG}\u${PRES}@${PB}\w${PRES}${PS_GIT}\n${PS_VENV}\$ "
+    PS1="\${debian_chroot:+(\$debian_chroot)}${PS_LE}@${PS_DATE} ${PG}\u@\h${PRES}${PS_GIT}:${PB}\w${PRES}\n${PS_VENV}\$ "
 }
 
 PROMPT_COMMAND="_ps1"
@@ -177,10 +175,10 @@ fi
 
 export ANSIBLE_SSH_ARGS=""
 export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
-source /usr/local/bin/virtualenvwrapper.sh
+source ~/.local/bin/virtualenvwrapper.sh
 
-export DOCKER_HOST=tcp://localhost:2375
-export GOPATH=/mnt/c/Users/rcruceru/w/go_projects
-export GO111MODULE=on
-export PATH=$PATH:/usr/local/go/bin:/mnt/c/Users/rcruceru/w/go_projects/bin
+# export DOCKER_HOST=tcp://localhost:2375
+#export GOPATH=~/w/go_projects
+#export GO111MODULE=on
+#export PATH=$PATH:/usr/local/go/bin:~/w/go_projects/bin
 source ~/.kubectl_completion
